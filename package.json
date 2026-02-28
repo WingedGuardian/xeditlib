@@ -1,0 +1,40 @@
+{
+  "name": "xeditlib",
+  "version": "1.0.0",
+  "description": "Node.js FFI wrapper for XEditLib.dll — programmatic access to xEdit for Bethesda game plugins (ESP/ESM/ESL)",
+  "main": "xelib.js",
+  "scripts": {
+    "test": "node examples/basic.js"
+  },
+  "keywords": [
+    "xedit",
+    "xeditlib",
+    "xelib",
+    "skyrim",
+    "fallout",
+    "bethesda",
+    "esp",
+    "esm",
+    "modding",
+    "tes5edit",
+    "fo4edit",
+    "zedit"
+  ],
+  "author": "WingedGuardian",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WingedGuardian/xeditlib.git"
+  },
+  "homepage": "https://github.com/WingedGuardian/xeditlib#readme",
+  "bugs": {
+    "url": "https://github.com/WingedGuardian/xeditlib/issues"
+  },
+  "dependencies": {
+    "koffi": "^2.15.1"
+  },
+  "os": ["win32"],
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

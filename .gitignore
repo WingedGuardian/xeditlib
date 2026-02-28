@@ -1,0 +1,4 @@
+node_modules/
+*.log
+xelib_log.txt
+plugins/
