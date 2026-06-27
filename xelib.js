@@ -265,8 +265,13 @@ function getByte(fn) {
 }
 
 function fail(msg) {
-    const stack = getString(len => raw.GetExceptionStack(len));
-    const exMsg = getString(len => raw.GetExceptionMessage(len));
+    // Use the *Length variants (write length to buffer) — same pattern as
+    // getExceptionMessage()/getExceptionStack() below. Calling GetExceptionStack/
+    // GetExceptionMessage directly here is wrong (they need buffer+length, 2 args)
+    // and made fail() throw a misleading TypeError, masking the real error.
+    let exMsg = '', stack = '';
+    try { exMsg = getString(len => { raw.GetExceptionMessageLength(len); }); } catch (e) {}
+    try { stack = getString(len => { raw.GetExceptionStackLength(len); }); } catch (e) {}
     const parts = [msg, exMsg, stack].filter(Boolean);
     throw new Error(parts.join('\n'));
 }
