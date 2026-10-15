@@ -4,6 +4,22 @@ Node.js wrapper for [XEditLib.dll](https://github.com/z-edit/xedit-lib) — prog
 
 Uses [koffi](https://koffi.dev/) for FFI bindings. No C++ compilation required — just install and go.
 
+## Diagnostic readers
+
+Messages, exception messages and exception stacks use their dedicated native
+readers. `getString(lengthFunction, reader)` defaults to `GetResultString` for
+ordinary values; advanced callers can pass a native reader function or its name.
+Buffers reserve the UTF-16 terminator written by `GetMessages`. The reported
+length still excludes it, as required by the native API.
+
+Diagnostic channels are consumed when read. An internal failure collects both
+the native message and available stack before constructing its JavaScript error.
+The first native exception can have no captured stack; absence is retained.
+
+Run `npm test` for simulated channel/UTF-16 boundary tests. `npm run test:native`
+qualifies the bundled DLL on Windows, without loading plugins or editing registry
+configuration. It needs koffi installed and may write the DLL's log in its cwd.
+
 ## Why this exists
 
 The original [xelib npm package](https://www.npmjs.com/package/xelib) is a placeholder that doesn't work. The real xelib (from [zEdit](https://github.com/z-edit/zedit)) used native C++ bindings via [nan](https://github.com/nodejs/nan), which broke on modern Node.js versions and required a full C++ build toolchain.

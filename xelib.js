@@ -213,13 +213,19 @@ const raw = {
 
 // === High-level helpers ===
 
-function getString(fn) {
+function getString(fn, reader = raw.GetResultString) {
     const lenBuf = Buffer.alloc(4, 0);
     fn(lenBuf);
     const len = lenBuf.readInt32LE(0);
+    if (len < 0) throw new RangeError('native string length cannot be negative');
     if (len < 1) return '';
-    const strBuf = Buffer.alloc(len * 2, 0);
-    raw.GetResultString(strBuf, len);
+    // GetMessages uses StrLCopy and writes a trailing UTF-16 NUL. Lengths
+    // exclude that terminator; other readers copy exactly len code units.
+    const strBuf = Buffer.alloc((len + 1) * 2, 0);
+    const read = typeof reader === 'string' ? raw[reader] : reader;
+    if (typeof read !== 'function') throw new TypeError('getString needs a native string reader');
+    const ok = read(strBuf, len);
+    if (ok === 0 || ok === false) throw new Error('native string reader failed');
     return readWide(strBuf, len);
 }
 
@@ -270,8 +276,9 @@ function fail(msg) {
     // GetExceptionMessage directly here is wrong (they need buffer+length, 2 args)
     // and made fail() throw a misleading TypeError, masking the real error.
     let exMsg = '', stack = '';
-    try { exMsg = getString(len => { raw.GetExceptionMessageLength(len); }); } catch (e) {}
-    try { stack = getString(len => { raw.GetExceptionStackLength(len); }); } catch (e) {}
+    // Collect both consuming diagnostic channels before presenting the error.
+    try { stack = getString(len => { raw.GetExceptionStackLength(len); }, raw.GetExceptionStack); } catch (e) {}
+    try { exMsg = getString(len => { raw.GetExceptionMessageLength(len); }, raw.GetExceptionMessage); } catch (e) {}
     const parts = [msg, exMsg, stack].filter(Boolean);
     throw new Error(parts.join('\n'));
 }
@@ -309,14 +316,14 @@ const xelib = {
 
     // MESSAGES
     getMessages() {
-        return getString(len => { raw.GetMessagesLength(len); }, 'GetMessages');
+        return getString(len => { raw.GetMessagesLength(len); }, raw.GetMessages);
     },
     clearMessages() { raw.ClearMessages(); },
     getExceptionMessage() {
-        return getString(len => { raw.GetExceptionMessageLength(len); });
+        return getString(len => { raw.GetExceptionMessageLength(len); }, raw.GetExceptionMessage);
     },
     getExceptionStack() {
-        return getString(len => { raw.GetExceptionStackLength(len); });
+        return getString(len => { raw.GetExceptionStackLength(len); }, raw.GetExceptionStack);
     },
 
     // SETUP
